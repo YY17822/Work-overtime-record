@@ -1,0 +1,15 @@
+{
+  "name": "諸葛亮加班",
+  "short_name": "諸葛亮加班",
+  "description": "輸入上班時間，算出正常下班與加班費半小時節點",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#14213d",
+  "theme_color": "#14213d",
+  "lang": "zh-Hant",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
