@@ -74,6 +74,8 @@ main{max-width:1000px;margin:0 auto;padding:14px 14px 0}
 .tg.ok{background:var(--ok-weak);color:var(--ok)}
 .tg.bad{background:var(--bad-weak);color:var(--bad)}
 .tg.miss{background:var(--todo-weak);color:var(--todo)}
+.tg.none{background:var(--ok-weak);color:var(--ok)}
+
 @media (prefers-color-scheme:dark){.tg.plan{background:#1f2d3c;color:#8fb8e2}}
 @media(min-width:620px){
   .cal{padding:12px}.cal-grid{gap:6px}
@@ -144,8 +146,10 @@ textarea{resize:vertical}
 .line>span{font-size:13px;color:var(--muted)}
 .stepper{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .stepper button{border:0;background:var(--bg);width:44px;height:40px;font-size:20px}
-.stepper output{min-width:70px;text-align:center;font-weight:700;font-size:17px;font-variant-numeric:tabular-nums}
-.stepper output::after{content:" h";font-weight:400;font-size:13px;color:var(--muted)}
+.stepper .sv-wrap{display:flex;align-items:baseline;justify-content:center;gap:2px;min-width:74px;padding:0 4px;cursor:text}
+.stepper .sv{width:46px;text-align:right;font-weight:700;font-size:17px;font-variant-numeric:tabular-nums;border:0;background:transparent;padding:6px 0;border-radius:6px}
+.stepper .sv:focus{outline:2px solid var(--primary);outline-offset:1px;background:var(--bg)}
+.stepper .sv-wrap span{font-size:13px;color:var(--muted)}
 .presets{display:flex;gap:6px;flex-wrap:wrap}
 .presets button{border:1px solid var(--line);background:transparent;border-radius:8px;padding:3px 10px;font-size:13px}
 .hint{font-size:12px;color:var(--muted);margin:0}
@@ -247,6 +251,9 @@ textarea{resize:vertical}
 .login-card h2{margin:0;font-size:20px}
 .login-card .btn{padding:12px;font-size:16px}
 .menu .who{font-size:12px;color:var(--muted);padding:2px 12px 6px}
+#noOt{width:100%;margin-top:10px;padding:11px}
+#noOt.done{background:var(--ok-weak);color:var(--ok);border-color:transparent;font-weight:600}
+.badge.none{background:var(--ok-weak);color:var(--ok)}
 </style>
 </head>
 <body>
@@ -280,6 +287,7 @@ textarea{resize:vertical}
     <h2>正常下班時間</h2>
     <div class="big"><span class="t" id="off">--:--</span><span class="tnote">工時 8 小時＋午休 1 小時</span></div>
     <div id="status" class="status">輸入上班時間開始計算</div>
+    <button id="noOt" class="btn">🏠 正常下班（無加班）</button>
   </section>
   <section class="tcard">
     <h2>加班費節點（滿 30 分鐘才可申請）</h2>
@@ -327,33 +335,36 @@ textarea{resize:vertical}
         </label>
       </div>
 
-      <fieldset class="block">
+      <fieldset class="block" id="fsActual">
         <legend>① 實際加班</legend>
         <label class="field"><span>上班打卡</span><input type="time" name="clockIn"></label>
+        <label class="switch"><input type="checkbox" name="noOvertime"> 正常下班（無加班）</label>
+        <div class="ot-rows" style="display:grid;gap:10px">
         <div class="row2">
           <label class="field"><span>加班開始（選填）</span><input type="time" name="start"></label>
           <label class="field"><span>加班結束（選填）</span><input type="time" name="end"></label>
         </div>
         <div class="line"><span>時數</span>
-          <div class="stepper" data-name="actual"><button type="button" data-d="-0.5">−</button><output>0</output><button type="button" data-d="0.5">＋</button></div>
+          <div class="stepper" data-name="actual"><button type="button" data-d="-0.5">−</button><label class="sv-wrap"><input class="sv" type="text" inputmode="decimal" autocomplete="off" enterkeyhint="done" value="0"><span>h</span></label><button type="button" data-d="0.5">＋</button></div>
         </div>
         <div class="presets" data-for="actual">
           <button type="button" data-v="0.5">0.5</button><button type="button" data-v="1">1</button><button type="button" data-v="1.5">1.5</button><button type="button" data-v="2">2</button><button type="button" data-v="3">3</button><button type="button" data-v="4">4</button>
         </div>
         <p class="hint">填起訖時間會自動換算時數（以半小時為單位，未滿捨去）。只填預計單、還沒加班可留 0。</p>
+        </div>
       </fieldset>
 
       <fieldset class="block" id="fsPlan">
         <legend><label class="switch"><input type="checkbox" name="planFiled"> ② 已填【預計加班單】</label></legend>
         <div class="line dim"><span>預計時數</span>
-          <div class="stepper" data-name="plan"><button type="button" data-d="-0.5">−</button><output>0</output><button type="button" data-d="0.5">＋</button></div>
+          <div class="stepper" data-name="plan"><button type="button" data-d="-0.5">−</button><label class="sv-wrap"><input class="sv" type="text" inputmode="decimal" autocomplete="off" enterkeyhint="done" value="0"><span>h</span></label><button type="button" data-d="0.5">＋</button></div>
         </div>
       </fieldset>
 
       <fieldset class="block" id="fsApply">
         <legend><label class="switch"><input type="checkbox" name="applyFiled"> ③ 已填【加班申請單】</label></legend>
         <div class="line dim"><span>申請時數</span>
-          <div class="stepper" data-name="apply"><button type="button" data-d="-0.5">−</button><output>0</output><button type="button" data-d="0.5">＋</button></div>
+          <div class="stepper" data-name="apply"><button type="button" data-d="-0.5">−</button><label class="sv-wrap"><input class="sv" type="text" inputmode="decimal" autocomplete="off" enterkeyhint="done" value="0"><span>h</span></label><button type="button" data-d="0.5">＋</button></div>
         </div>
       </fieldset>
 
@@ -366,7 +377,7 @@ textarea{resize:vertical}
           <label><input type="radio" name="status" value="rejected"><span>已退回</span></label>
         </div>
         <div class="line" id="approvedLine"><span>核准時數</span>
-          <div class="stepper" data-name="approved"><button type="button" data-d="-0.5">−</button><output>0</output><button type="button" data-d="0.5">＋</button></div>
+          <div class="stepper" data-name="approved"><button type="button" data-d="-0.5">−</button><label class="sv-wrap"><input class="sv" type="text" inputmode="decimal" autocomplete="off" enterkeyhint="done" value="0"><span>h</span></label><button type="button" data-d="0.5">＋</button></div>
         </div>
       </fieldset>
 
@@ -465,7 +476,7 @@ const STATUS = { none: '未送出', pending: '簽核中', approved: '已通過',
 const autoType = date => { const w = parseYmd(date).getDay(); return w === 6 ? 'restday' : w === 0 ? 'offday' : 'weekday'; };
 const blank = date => ({
   id: date, date, dayType: autoType(date), clockIn: '', start: '', end: '',
-  actual: 0, planFiled: false, plan: 0, applyFiled: false, apply: 0,
+  actual: 0, noOvertime: false, planFiled: false, plan: 0, applyFiled: false, apply: 0,
   status: 'none', approved: 0, note: '',
   createdAt: Date.now(), updatedAt: Date.now()
 });
@@ -530,6 +541,7 @@ function analyze(r) {
   return out;
 }
 function badge(r) {
+  if (r.noOvertime && r.status === 'none' && !r.applyFiled) return ['none', '無加班'];
   if (r.status === 'approved') return ['ok', '已通過'];
   if (r.status === 'rejected') return ['bad', '已退回'];
   if (r.status === 'pending') return ['warn', '簽核中'];
@@ -540,7 +552,7 @@ function badge(r) {
 }
 const FILTERS = [
   ['all', '全部', () => true],
-  ['todo', '未完成', r => r.status !== 'approved' && (r.actual > 0 || r.planFiled || r.applyFiled)],
+  ['todo', '未完成', r => r.status !== 'approved' && !r.noOvertime && (r.actual > 0 || r.planFiled || r.applyFiled)],
   ['pending', '簽核中', r => r.status === 'pending'],
   ['approved', '已通過', r => r.status === 'approved'],
   ['issue', '需注意', r => analyze(r).length > 0]
@@ -584,7 +596,7 @@ function renderCalendar(recs) {
       <span class="dn"><b>${d}</b>${r && r.actual > 0 ? `<span class="dh">${fmtH(r.actual)}h</span>` : ''}</span>${tags}</button>`;
   }
   $('#cal').innerHTML = `<div class="cal-grid">${html}</div>
-    <div class="legend">${T('plan', '已預計', '預')}${T('apply', '已申請加班', '申')}${T('ok', '已通過', '過')}${T('bad', '已退回', '退回')}${T('miss', '待補單', '補單')}<span>標籤右側為單據時數，<b style="color:var(--bad)">紅字</b>＝與實際加班不符</span></div>`;
+    <div class="legend">${T('plan', '已預計', '預')}${T('apply', '已申請加班', '申')}${T('ok', '已通過', '過')}${T('bad', '已退回', '退回')}${T('miss', '待補單', '補單')}${T('none', '無加班', '無加班')}<span>標籤右側為單據時數，<b style="color:var(--bad)">紅字</b>＝與實際加班不符</span></div>`;
 }
 
 function renderSummary(recs) {
@@ -628,6 +640,7 @@ function renderList(recs, monthCount) {
     const w = d.getDay();
     const [bc, bt] = badge(r);
     const iss = analyze(r);
+    const quiet = r.noOvertime && !r.planFiled && !r.applyFiled;
     const time = r.start && r.end ? `<small>${r.start}–${r.end}</small>` : '';
     const stepPlan = r.planFiled ? `<span class="step on">預計 <em class="${diffCls(r, r.plan)}">${fmtH(r.plan)}h</em></span>` : `<span class="step">預計 —</span>`;
     const stepApply = r.applyFiled ? `<span class="step on">申請 <em class="${diffCls(r, r.apply)}">${fmtH(r.apply)}h</em></span>` : `<span class="step">申請 —</span>`;
@@ -637,8 +650,8 @@ function renderList(recs, monthCount) {
     return `<button class="card" data-id="${r.id}">
       <div class="d ${w === 0 || w === 6 ? 'we' : ''}"><b>${d.getDate()}</b><small>週${WD[w]}</small></div>
       <div class="cm">
-        <div class="row"><span class="hrs">${fmtH(r.actual)} h${time}</span><span class="tag">${DAY_TYPES[r.dayType]}</span><span class="badge ${bc}">${bt}</span></div>
-        <div class="steps">${stepPlan}${stepApply}${stepOk}</div>
+        <div class="row"><span class="hrs">${quiet ? `正常下班${r.clockIn ? `<small>上班 ${r.clockIn}</small>` : ''}` : `${fmtH(r.actual)} h${time}`}</span><span class="tag">${DAY_TYPES[r.dayType]}</span><span class="badge ${bc}">${bt}</span></div>
+        ${quiet ? '' : `<div class="steps">${stepPlan}${stepApply}${stepOk}</div>`}
         ${iss.length ? `<div class="issues">${iss.map(i => `<span class="${i.lv}">${i.lv === 'info' ? 'ⓘ' : '⚠'} ${esc(i.t)}</span>`).join('')}</div>` : ''}
         ${r.note ? `<div class="note">📝 ${esc(r.note)}</div>` : ''}
       </div>
@@ -796,10 +809,35 @@ const form = $('#editForm');
 
 function setStep(name, v) {
   steps[name] = half(v);
-  $(`.stepper[data-name="${name}"] output`).textContent = fmtH(steps[name]);
+  $(`.stepper[data-name="${name}"] .sv`).value = fmtH(steps[name]);
   updatePayHint();
 }
+// 時數可直接打字：1.5、2、1:30（=1.5）都行，會自動取到最接近的半小時
+function parseH(v) {
+  v = String(v).trim().replace(/[，,]/g, '.').replace(/[^\d.:]/g, '');
+  if (!v) return 0;
+  if (v.includes(':')) { const [h, m] = v.split(':'); return (Number(h) || 0) + (Number(m) || 0) / 60; }
+  return Number(v) || 0;
+}
+form.addEventListener('focusin', e => { if (e.target.classList.contains('sv')) e.target.select(); });
+form.addEventListener('input', e => {
+  if (!e.target.classList.contains('sv')) return;
+  steps[e.target.closest('.stepper').dataset.name] = half(parseH(e.target.value)); // 打字中不改畫面，只更新數值
+  updatePayHint();
+});
+form.addEventListener('change', e => {
+  if (e.target.classList.contains('sv')) setStep(e.target.closest('.stepper').dataset.name, parseH(e.target.value));
+});
+form.addEventListener('keydown', e => {
+  if (!e.target.classList.contains('sv') || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+  e.preventDefault();
+  const name = e.target.closest('.stepper').dataset.name;
+  setStep(name, half(parseH(e.target.value)) + (e.key === 'ArrowUp' ? 0.5 : -0.5));
+  e.target.select();
+});
 function syncDisabled() {
+  $('#fsActual').classList.toggle('no-ot', form.noOvertime.checked);
+  $('.ot-rows', form).style.display = form.noOvertime.checked ? 'none' : 'grid';
   $('#fsPlan').classList.toggle('off', !form.planFiled.checked);
   $('#fsApply').classList.toggle('off', !form.applyFiled.checked);
   const st = form.status.value;
@@ -825,6 +863,7 @@ function fillForm(src, isNew) {
   form.clockIn.value = r.clockIn || '';
   form.start.value = r.start || '';
   form.end.value = r.end || '';
+  form.noOvertime.checked = !!r.noOvertime;
   form.planFiled.checked = !!r.planFiled;
   form.applyFiled.checked = !!r.applyFiled;
   form.querySelector(`[name=status][value="${r.status}"]`).checked = true;
@@ -854,6 +893,10 @@ form.addEventListener('click', e => {
   }
   const p = e.target.closest('.presets button');
   if (p) setStep(p.closest('.presets').dataset.for, Number(p.dataset.v));
+});
+form.noOvertime.addEventListener('change', () => {
+  if (form.noOvertime.checked) { setStep('actual', 0); form.start.value = ''; form.end.value = ''; }
+  syncDisabled();
 });
 form.date.addEventListener('change', () => {
   const v = form.date.value;
@@ -889,9 +932,11 @@ $$('[name=status]', form).forEach(el => el.addEventListener('change', () => {
 
 form.addEventListener('submit', async e => {
   e.preventDefault();
+  $$('.stepper .sv', form).forEach(i => setStep(i.closest('.stepper').dataset.name, parseH(i.value))); // 先收下手打的數字
   const msg = $('#formMsg');
   if (!form.date.value) { msg.textContent = '請選擇日期'; return; }
-  if (steps.actual === 0 && !form.planFiled.checked && !form.applyFiled.checked && !form.clockIn.value) {
+  if (form.noOvertime.checked) { setStep('actual', 0); form.start.value = ''; form.end.value = ''; }
+  if (steps.actual === 0 && !form.planFiled.checked && !form.applyFiled.checked && !form.clockIn.value && !form.noOvertime.checked) {
     msg.textContent = '請輸入上班時間或加班時數，或至少勾選一張表單'; return;
   }
   const newDate = form.date.value;
@@ -908,6 +953,7 @@ form.addEventListener('submit', async e => {
     start: form.start.value,
     end: form.end.value,
     actual: steps.actual,
+    noOvertime: form.noOvertime.checked,
     planFiled: form.planFiled.checked,
     plan: form.planFiled.checked ? steps.plan : 0,
     applyFiled: form.applyFiled.checked,
@@ -1253,10 +1299,12 @@ function tagsHtml(r) {
   if (r.status === 'approved') t += T('ok', '已通過', '過', r.approved);
   if (r.status === 'rejected') t += T('bad', '已退回', '退回');
   if (r.actual > 0 && (!r.planFiled || !r.applyFiled)) t += T('miss', '待補單', '補單');
+  if (r.noOvertime) t += T('none', '無加班', '無加班');
   return t;
 }
 
 function renderTodayRec() {
+  renderNoOt();
   const r = todayRec(), d = new Date();
   let h = `<h2>今日紀錄 · ${d.getMonth() + 1}/${d.getDate()}（週${WD[d.getDay()]}）</h2>`;
   if (!r) h += `<p class="tnote">還沒有紀錄。按「記錄上班」或選一個加班節點就會自動建立。</p>`;
@@ -1296,9 +1344,24 @@ $('#nodes').addEventListener('click', async e => {
     await saveToday({ actual: 0, start: '', end: '' });
     toast('已取消今天的加班節點');
   } else {
-    await saveToday({ clockIn: calc.inTime, actual: k * 0.5, start: hm(calc.otStart), end: hm(calc.otStart + k * 30) });
+    await saveToday({ clockIn: calc.inTime, noOvertime: false, actual: k * 0.5, start: hm(calc.otStart), end: hm(calc.otStart + k * 30) });
     toast(`今天加班 ${k * 0.5} 小時（${hm(calc.otStart + k * 30)} 下班）已記錄`);
   }
+});
+function renderNoOt() {
+  const r = todayRec(), b = $('#noOt');
+  const on = !!(r && r.noOvertime);
+  b.textContent = on ? '✓ 今天正常下班（無加班）· 再按取消' : '🏠 正常下班（無加班）';
+  b.className = 'btn' + (on ? ' done' : '');
+}
+$('#noOt').addEventListener('click', async () => {
+  const r = todayRec();
+  if (r && r.noOvertime) { await saveToday({ noOvertime: false }); toast('已取消「無加班」'); return; }
+  if (r && r.actual > 0 && !confirm(`今天已記錄加班 ${fmtH(r.actual)} 小時，改成「無加班」會清除這個時數，確定？`)) return;
+  const patch = { noOvertime: true, actual: 0, start: '', end: '' };
+  if (calc.valid) patch.clockIn = calc.inTime;
+  await saveToday(patch);
+  toast('已記錄：今天正常下班，無加班');
 });
 $('#todayRec').addEventListener('click', e => { if (e.target.closest('[data-today-edit]')) openEdit(null, todayKey()); });
 $('#now').addEventListener('click', () => { const d = new Date(); $('#in').value = pad(d.getHours()) + ':' + pad(d.getMinutes()); renderToday(); });
@@ -1389,7 +1452,7 @@ const Store = {
 const toRow = r => ({
   work_date: r.date, day_type: r.dayType,
   clock_in: r.clockIn || null, ot_start: r.start || null, ot_end: r.end || null,
-  actual_hours: r.actual, plan_filed: !!r.planFiled, plan_hours: r.plan,
+  actual_hours: r.actual, no_overtime: !!r.noOvertime, plan_filed: !!r.planFiled, plan_hours: r.plan,
   apply_filed: !!r.applyFiled, apply_hours: r.apply,
   status: r.status, approved_hours: r.approved, note: r.note || ''
 });
@@ -1397,7 +1460,7 @@ const hhmm = v => (v ? String(v).slice(0, 5) : '');
 const fromRow = x => ({
   id: x.work_date, date: x.work_date, dayType: x.day_type,
   clockIn: hhmm(x.clock_in), start: hhmm(x.ot_start), end: hhmm(x.ot_end),
-  actual: +x.actual_hours, planFiled: x.plan_filed, plan: +x.plan_hours,
+  actual: +x.actual_hours, noOvertime: !!x.no_overtime, planFiled: x.plan_filed, plan: +x.plan_hours,
   applyFiled: x.apply_filed, apply: +x.apply_hours,
   status: x.status, approved: +x.approved_hours, note: x.note || '',
   createdAt: Date.parse(x.created_at), updatedAt: Date.parse(x.updated_at)
